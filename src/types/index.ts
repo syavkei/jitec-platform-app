@@ -95,6 +95,63 @@ export interface GlossaryTerm {
   example_sentence_vi?: string | null;
 }
 
+export interface AppSettings {
+  app_name: string;
+  gemini_api_key?: string | null;
+  openai_api_key?: string | null;
+  ai_translation_provider: string;
+  default_languages: string[];
+  default_passing_score: number;
+  default_fe_duration_minutes: number;
+  default_ap_duration_minutes: number;
+  enable_public_registration: boolean;
+  enable_furigana_tooltips: boolean;
+}
+
+export interface SystemStats {
+  total_exams: number;
+  total_questions: number;
+  total_glossary_terms: number;
+  total_diagrams: number;
+  tesseract_ocr_available: boolean;
+  tesseract_languages: string[];
+  storage_size_kb: number;
+  system_version: string;
+}
+
+// --- AUTH TYPES ---
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  country?: string | null;
+  target_exam?: string | null;
+  created_at?: string | null;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  token: string;
+  user: User;
+  message: string;
+}
+
+export interface UserAttemptHistory {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  exam_title: string;
+  scaled_score: number;
+  score_percentage: number;
+  is_passed: boolean;
+  correct_count: number;
+  total_questions: number;
+  time_spent_seconds: number;
+  completed_at: string;
+}
+
 export interface QuestionResult {
   question_number: number;
   selected_answer?: string | null;
