@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Question, SupportedLang } from "@/types";
+import { useI18nStore } from "@/lib/i18n";
 import { FuriganaText } from "../common/FuriganaTooltip";
 import { Flag, Languages, CheckCircle, XCircle, Info, HelpCircle, Columns, Sparkles } from "lucide-react";
 
@@ -22,9 +23,17 @@ export function QuestionCard({
   onToggleFlag,
   mode = "cbt",
 }: QuestionCardProps) {
-  const [activeLang, setActiveLang] = useState<SupportedLang>("ja");
+  const globalLang = useI18nStore((state) => state.lang);
+  const [activeLang, setActiveLang] = useState<SupportedLang>(globalLang || "ja");
   const [isDualView, setIsDualView] = useState(false);
   const [hasRevealedPractice, setHasRevealedPractice] = useState(false);
+
+  // Sync with global language if changed
+  useEffect(() => {
+    if (globalLang) {
+      setActiveLang(globalLang);
+    }
+  }, [globalLang]);
 
   const isPractice = mode === "practice";
   const isCorrect = selectedAnswer && question.correct_answer && selectedAnswer.toUpperCase() === question.correct_answer.toUpperCase();
@@ -52,8 +61,6 @@ export function QuestionCard({
     return question.explanation_ja;
   };
 
-  const targetTranslation = getTranslatedQuestionText(activeLang === "ja" ? "en" : activeLang);
-
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
       {/* Header Info */}
@@ -79,7 +86,7 @@ export function QuestionCard({
           <div className="flex items-center rounded-xl border border-zinc-200 bg-zinc-50 p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
             <button
               onClick={() => { setActiveLang("ja"); setIsDualView(false); }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 activeLang === "ja" && !isDualView
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
@@ -89,7 +96,7 @@ export function QuestionCard({
             </button>
             <button
               onClick={() => { setActiveLang("en"); setIsDualView(false); }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 activeLang === "en" && !isDualView
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
@@ -99,7 +106,7 @@ export function QuestionCard({
             </button>
             <button
               onClick={() => { setActiveLang("id"); setIsDualView(false); }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 activeLang === "id" && !isDualView
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
@@ -109,7 +116,7 @@ export function QuestionCard({
             </button>
             <button
               onClick={() => { setActiveLang("vi"); setIsDualView(false); }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 activeLang === "vi" && !isDualView
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
@@ -120,7 +127,7 @@ export function QuestionCard({
             <button
               onClick={() => setIsDualView(!isDualView)}
               title="Tampilkan Bahasa Jepang dan Terjemahan Sekaligus"
-              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 isDualView
                   ? "bg-purple-600 text-white shadow-sm"
                   : "text-purple-600 hover:bg-purple-50 dark:text-purple-400"
@@ -134,7 +141,7 @@ export function QuestionCard({
           {/* Flag / Review Button */}
           <button
             onClick={onToggleFlag}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               isFlagged
                 ? "border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
                 : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -166,7 +173,7 @@ export function QuestionCard({
               </div>
               <p className="text-sm sm:text-base font-normal text-zinc-700 dark:text-zinc-200 leading-relaxed">
                 {getTranslatedQuestionText(activeLang) || getTranslatedQuestionText("en") || getTranslatedQuestionText("id") || (
-                  <span className="italic text-zinc-400">Terjemahan bahasa ini belum tersedia. Gunakan tombol AI Translate di Admin Studio.</span>
+                  <span className="italic text-zinc-400">Terjemahan sedang disiapkan.</span>
                 )}
               </p>
             </div>
@@ -231,7 +238,7 @@ export function QuestionCard({
                 onSelectAnswer(opt.key);
                 if (isPractice) setHasRevealedPractice(true);
               }}
-              className={`flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all ${cardStyle}`}
+              className={`flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all cursor-pointer ${cardStyle}`}
             >
               <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl font-bold text-sm transition-colors ${
                 isSelected
