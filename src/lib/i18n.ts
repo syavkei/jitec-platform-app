@@ -156,3 +156,20 @@ export const UI_TRANSLATIONS: Record<SupportedLang, I18nTranslations> = {
     kanjiHoverHint: "Rê chuột vào từ Kanji IT để xem phiên âm Furigana và ý nghĩa",
   },
 };
+
+export const translations = UI_TRANSLATIONS;
+
+interface I18nState {
+  lang: SupportedLang;
+  setLang: (lang: SupportedLang) => void;
+}
+
+export const useI18nStore = create<I18nState>((set) => ({
+  lang: "id",
+  setLang: (lang) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("jitec_lang", lang);
+    }
+    set({ lang });
+  },
+}));
