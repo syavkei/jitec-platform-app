@@ -5,18 +5,24 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Exam, ExamSubmitResponse } from "@/types";
 import { fetchExamById, submitExamAttempt } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 import { ExamTimer } from "@/components/exam/ExamTimer";
-import { QuestionCard } from "@/components/exam/QuestionCard";
 import { QuestionPalette } from "@/components/exam/QuestionPalette";
+import { QuestionCard } from "@/components/exam/QuestionCard";
 import { CBTResultModal } from "@/components/exam/CBTResultModal";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
+  Send,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Send,
   ArrowLeft,
+  Lock,
+  LogIn,
   GraduationCap,
   Sparkles,
-  Layers,
 } from "lucide-react";
 
 export default function ExamRunnerPage({
@@ -30,15 +36,25 @@ export default function ExamRunnerPage({
   const router = useRouter();
 
   const mode = (searchParams.get("mode") as "cbt" | "practice") || "cbt";
+  const { user, initAuthFromStorage } = useAuthStore();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authMounted, setAuthMounted] = useState(false);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flagged, setFlagged] = useState<Record<number, boolean>>({});
-  const [startTime] = useState<number>(Date.now());
+  const [timeSpent, setTimeSpent] = useState(0);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<ExamSubmitResponse | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+
+  useEffect(() => {
+    initAuthFromStorage();
+    setAuthMounted(true);
+  }, [initAuthFromStorage]);
 
   useEffect(() => {
     fetchExamById(examId)
@@ -49,180 +65,199 @@ export default function ExamRunnerPage({
       .catch(() => setLoading(false));
   }, [examId]);
 
-  if (loading) {
+  // Auth requirement check: Only logged in users can attempt exams/practice
+  if (authMounted && !user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <Card gradientAccent="indigo" className="max-w-md w-full text-center p-8 space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 shadow-md">
+            <Lock className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <Badge variant="warning">Akses Terbatas Peserta</Badge>
+            <CardTitle className="text-xl">Login Diperlukan</CardTitle>
+            <CardDescription className="text-xs">
+              Hanya peserta yang telah masuk (login) yang dapat mengerjakan simulasi CBT dan latihan soal untuk mencatat riwayat skor kelulusan Anda.
+            </CardDescription>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Button asChild variant="gradient" className="w-full h-11">
+              <Link href={`/login?redirect=/exams/${examId}?mode=${mode}`}>
+                <LogIn className="h-4 w-4" />
+                <span>Masuk Sekarang (Login)</span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/register">
+                <span>Daftar Akun Peserta Baru</span>
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading || !exam) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
-          <p className="text-xs text-zinc-500 font-medium">Memuat lembar ujian...</p>
+        <div className="text-center space-y-3">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <p className="text-xs font-semibold text-zinc-500">
+            Menyiapkan lembar ujian CBT...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (!exam || exam.questions.length === 0) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <Layers className="mx-auto h-12 w-12 text-zinc-400" />
-        <h2 className="mt-4 font-bold text-lg text-zinc-900 dark:text-white">
-          Lembar Ujian Tidak Ditemukan
-        </h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          Ujian ini belum memiliki daftar soal atau belum dipublikasikan dari Admin Studio.
-        </p>
-        <Link
-          href="/exams"
-          className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Kembali ke Katalog</span>
-        </Link>
-      </div>
-    );
-  }
-
-  const currentQ = exam.questions[currentIndex];
-  const totalQ = exam.questions.length;
-
-  const handleSelectAnswer = (key: string) => {
+  const handleSelectOption = (questionId: string, optionKey: string) => {
     setAnswers((prev) => ({
       ...prev,
-      [currentQ.id]: key,
+      [questionId]: optionKey,
     }));
   };
 
-  const handleToggleFlag = () => {
+  const handleToggleFlag = (questionNumber: number) => {
     setFlagged((prev) => ({
       ...prev,
-      [currentQ.question_number]: !prev[currentQ.question_number],
+      [questionNumber]: !prev[questionNumber],
     }));
   };
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
-
-    const unansweredCount = totalQ - Object.keys(answers).length;
-    if (mode === "cbt" && unansweredCount > 0) {
-      const confirmSubmit = window.confirm(
-        `Masih ada ${unansweredCount} soal yang belum Anda jawab. Yakin ingin mengakhiri dan mengirim ujian?`
-      );
-      if (!confirmSubmit) return;
+    if (mode === "cbt") {
+      const unanswered = exam.questions.length - Object.keys(answers).length;
+      if (
+        unanswered > 0 &&
+        !window.confirm(
+          `Masih ada ${unanswered} soal yang belum dijawab. Apakah Anda yakin ingin menyelesaikan ujian sekarang?`
+        )
+      ) {
+        return;
+      }
     }
 
     setIsSubmitting(true);
-    const timeSpent = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-
     try {
-      const res = await submitExamAttempt(exam.id, answers, timeSpent);
+      const res = await submitExamAttempt(exam.id, answers, timeSpent, user?.id);
       setResult(res);
-    } catch (err) {
-      alert("Gagal mengirim jawaban ujian. Silakan coba lagi.");
+      setShowResultModal(true);
+    } catch (err: any) {
+      alert(`Gagal mengirim jawaban: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const currentQuestion = exam.questions[currentIndex];
+
   return (
-    <div className="min-h-screen bg-zinc-100/70 pb-20 dark:bg-zinc-950">
-      {/* Top Floating Action Bar */}
-      <div className="sticky top-16 z-40 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 sm:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+    <div className="min-h-screen bg-zinc-100/70 pb-24 dark:bg-zinc-950">
+      {/* Top Session Bar */}
+      <div className="sticky top-16 z-30 border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/exams"
-              className="rounded-lg border border-zinc-200 p-2 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="rounded-xl border border-zinc-200 p-2 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-zinc-900 dark:text-white">
+                <span className="font-extrabold text-sm text-zinc-900 dark:text-white">
                   {exam.title}
                 </span>
-                <span className={`rounded px-2 py-0.5 font-bold text-[10px] uppercase ${
-                  mode === "cbt"
-                    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
-                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                }`}>
+                <span className="rounded-full bg-indigo-100 px-2 py-0.5 font-bold text-[10px] text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                   {mode === "cbt" ? "Simulasi CBT" : "Latihan Santai"}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500">
-                Soal {currentIndex + 1} dari {totalQ} ({Object.keys(answers).length} Terjawab)
+                {exam.level_name} • {exam.total_questions} Soal
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {mode === "cbt" && (
               <ExamTimer
                 initialSeconds={exam.duration_minutes * 60}
                 onTimeUp={handleSubmit}
-                isRunning={!result}
               />
             )}
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 font-bold text-xs text-white shadow-sm hover:bg-indigo-500 active:scale-95 disabled:opacity-50"
+              variant="gradient"
+              size="sm"
             >
               <Send className="h-3.5 w-3.5" />
-              <span>Selesai & Kumpulkan</span>
-            </button>
+              <span>{isSubmitting ? "Menilai..." : "Kirim Jawaban (Submit)"}</span>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Runner Layout */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-          {/* Main Question Area (3 Cols) */}
-          <div className="space-y-6 lg:col-span-3">
-            <QuestionCard
-              question={currentQ}
-              selectedAnswer={answers[currentQ.id]}
-              isFlagged={!!flagged[currentQ.question_number]}
-              onSelectAnswer={handleSelectAnswer}
-              onToggleFlag={handleToggleFlag}
-              mode={mode}
-            />
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Main Question Card Area (8 cols) */}
+          <div className="space-y-6 lg:col-span-8">
+            {currentQuestion && (
+              <QuestionCard
+                question={currentQuestion}
+                selectedAnswer={answers[currentQuestion.id]}
+                onSelectAnswer={(opt: string) => handleSelectOption(currentQuestion.id, opt)}
+                isFlagged={!!flagged[currentQuestion.question_number]}
+                onToggleFlag={() => handleToggleFlag(currentQuestion.question_number)}
+                mode={mode}
+              />
+            )}
 
-            {/* Bottom Navigation Buttons */}
-            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <button
+            {/* Stepper Navigation */}
+            <div className="flex items-center justify-between rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
-                <span>Sebelumnya</span>
-              </button>
+                <span>Soal Sebelumnya</span>
+              </Button>
 
-              <span className="text-xs font-medium text-zinc-500">
-                {currentIndex + 1} / {totalQ}
+              <span className="text-xs font-semibold text-zinc-500">
+                Soal {currentIndex + 1} dari {exam.questions.length}
               </span>
 
-              <button
-                disabled={currentIndex === totalQ - 1}
-                onClick={() => setCurrentIndex(Math.min(totalQ - 1, currentIndex + 1))}
-                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-40"
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentIndex === exam.questions.length - 1}
+                onClick={() =>
+                  setCurrentIndex((prev) =>
+                    Math.min(exam.questions.length - 1, prev + 1)
+                  )
+                }
               >
-                <span>Selanjutnya</span>
+                <span>Soal Berikutnya</span>
                 <ChevronRight className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
-          {/* Right Palette Column (1 Col) */}
-          <div className="lg:col-span-1">
+          {/* Question Palette Sidebar (4 cols) */}
+          <div className="lg:col-span-4">
             <div className="sticky top-36">
               <QuestionPalette
                 questions={exam.questions}
                 currentIndex={currentIndex}
                 answers={answers}
                 flagged={flagged}
-                onSelect={(idx) => setCurrentIndex(idx)}
+                onSelect={(idx: number) => setCurrentIndex(idx)}
               />
             </div>
           </div>
@@ -230,15 +265,14 @@ export default function ExamRunnerPage({
       </div>
 
       {/* Result Modal */}
-      {result && (
+      {showResultModal && result && (
         <CBTResultModal
           result={result}
           examTitle={exam.title}
           onRetry={() => {
-            setResult(null);
             setAnswers({});
             setFlagged({});
-            setCurrentIndex(0);
+            setShowResultModal(false);
           }}
         />
       )}
