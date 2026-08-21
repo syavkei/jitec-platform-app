@@ -264,7 +264,7 @@ export default function HomePage() {
 
                 {/* Options */}
                 <div className="space-y-2.5">
-                  {demoQuestion.options.map((opt) => {
+                  {demoQuestion.options.map((opt, idx) => {
                     const isSelected = selectedOption === opt.key;
                     const isCorrect = opt.key === demoQuestion.correct;
                     const isRevealed = selectedOption !== null;
@@ -280,7 +280,7 @@ export default function HomePage() {
 
                     return (
                       <button
-                        key={opt.key}
+                        key={`demo-opt-${opt.key || 'k'}-${idx}`}
                         onClick={() => setSelectedOption(opt.key)}
                         className={`flex w-full items-start gap-3 rounded-2xl border p-3.5 text-left text-xs sm:text-sm transition-all cursor-pointer ${optStyle}`}
                       >

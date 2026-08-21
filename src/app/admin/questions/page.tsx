@@ -413,7 +413,7 @@ function QuestionsManagementContent() {
                 </label>
                 {editingQuestion.options.map((opt, idx) => (
                   <div
-                    key={opt.key}
+                    key={`edit-opt-${opt.key || 'key'}-${idx}`}
                     className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 dark:border-zinc-700 dark:bg-zinc-800/50 space-y-2"
                   >
                     <div className="font-bold text-indigo-600">Opsi {opt.key}:</div>

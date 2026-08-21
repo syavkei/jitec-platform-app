@@ -239,7 +239,7 @@ export function QuestionEditor({
               <div className="space-y-3">
                 {question.options.map((opt, idx) => (
                   <div
-                    key={opt.key}
+                    key={`opt-${opt.key || 'key'}-${idx}`}
                     className={`rounded-2xl border p-3.5 ${
                       opt.key === question.correct_answer
                         ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20"

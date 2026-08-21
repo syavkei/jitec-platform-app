@@ -211,7 +211,7 @@ export function QuestionCard({
 
       {/* Options List */}
       <div className="mt-6 space-y-3">
-        {question.options.map((opt) => {
+        {question.options.map((opt, idx) => {
           const isSelected = selectedAnswer === opt.key;
           const isOfficialCorrect = question.correct_answer && opt.key.toUpperCase() === question.correct_answer.toUpperCase();
 
@@ -233,7 +233,7 @@ export function QuestionCard({
 
           return (
             <button
-              key={opt.key}
+              key={`opt-${opt.key || 'key'}-${idx}`}
               onClick={() => {
                 onSelectAnswer(opt.key);
                 if (isPractice) setHasRevealedPractice(true);
