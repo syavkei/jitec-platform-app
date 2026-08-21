@@ -37,7 +37,131 @@ import {
   ShieldCheck,
   Loader2,
   Check,
+  Wand2,
 } from "lucide-react";
+
+/**
+ * Intelligent helper to extract exam metadata from official JITEC / IPA PDF filenames.
+ * Supports patterns like:
+ * - 2025r07_fe_kamoku_a_qs.pdf
+ * - 2024r06_ap_am_qs.pdf
+ * - 2023r05_ip_qs.pdf
+ * - 2021_ip_qs.pdf
+ * - 2024_db_am2_qs.pdf
+ * - 2022_haru_fe_am_qs.pdf
+ */
+function autofillExamMetadataFromFilename(filename: string) {
+  const clean = filename.toLowerCase().replace(".pdf", "");
+
+  // 1. Year Extraction
+  let year = 2025;
+  const yearMatch = clean.match(/(20\d\d)/);
+  if (yearMatch) {
+    year = parseInt(yearMatch[1], 10);
+  }
+
+  // 2. Session Extraction (e.g. r07, r06, r05, haru, aki)
+  let session = "r07";
+  const sessionMatch = clean.match(/(r0\d|r\d\d|haru|aki|h\d\d)/i);
+  if (sessionMatch) {
+    session = sessionMatch[1].toLowerCase();
+  } else if (year >= 2019) {
+    const reiwaYear = year - 2018;
+    session = `r0${reiwaYear}`;
+  }
+
+  // 3. Exam Code & Level Extraction
+  let examCode = "FE";
+  let level = "level2";
+  let levelName = "基本情報技術者試験";
+
+  if (clean.includes("ip") || clean.includes("passport") || clean.includes("it_passport") || clean.includes("level1")) {
+    examCode = "IP";
+    level = "level1";
+    levelName = "ITパスポート試験";
+  } else if (clean.includes("ap") || clean.includes("applied") || clean.includes("level3")) {
+    examCode = "AP";
+    level = "level3";
+    levelName = "応用情報技術者試験";
+  } else if (clean.includes("db") || clean.includes("database")) {
+    examCode = "DB";
+    level = "level4";
+    levelName = "データベーススペシャリスト試験";
+  } else if (clean.includes("sc") || clean.includes("security_specialist") || clean.includes("riss")) {
+    examCode = "SC";
+    level = "level4";
+    levelName = "情報処理安全確保支援士 (登録セキスぺ)";
+  } else if (clean.includes("sg")) {
+    examCode = "SG";
+    level = "level2";
+    levelName = "情報セキュリティマネジメント試験";
+  } else if (clean.includes("fe") || clean.includes("fundamental") || clean.includes("level2")) {
+    examCode = "FE";
+    level = "level2";
+    levelName = "基本情報技術者試験";
+  }
+
+  // 4. Section & Duration Extraction
+  let section = "kamoku_a";
+  let sectionTitle = "科目A";
+  let duration = 90;
+
+  if (clean.includes("kamoku_b") || clean.includes("kamokub") || clean.includes("pm") || clean.includes("pm1")) {
+    if (examCode === "FE") {
+      section = "kamoku_b";
+      sectionTitle = "科目B";
+      duration = 100;
+    } else {
+      section = "pm";
+      sectionTitle = "午後";
+      duration = 150;
+    }
+  } else if (clean.includes("kamoku_a") || clean.includes("kamokua") || clean.includes("am") || clean.includes("am1") || clean.includes("am2")) {
+    if (clean.includes("am2")) {
+      section = "am2";
+      sectionTitle = "午前II";
+      duration = 40;
+    } else if (clean.includes("am1")) {
+      section = "am1";
+      sectionTitle = "午前I";
+      duration = 50;
+    } else if (examCode === "FE") {
+      section = "kamoku_a";
+      sectionTitle = "科目A";
+      duration = 90;
+    } else if (examCode === "IP") {
+      section = "kamoku_a";
+      sectionTitle = "CBT総合";
+      duration = 120;
+    } else {
+      section = "am";
+      sectionTitle = "午前";
+      duration = 150;
+    }
+  } else {
+    if (examCode === "IP") {
+      section = "kamoku_a";
+      sectionTitle = "CBT総合";
+      duration = 120;
+    }
+  }
+
+  // 5. Japanese Reiwa Year Name
+  const reiwaYear = year - 2018;
+  const sessionKanji = session === "haru" ? "春期" : session === "aki" ? "秋期" : `令和${reiwaYear}年度`;
+  const title = `${sessionKanji} ${levelName} (${sectionTitle})`;
+
+  return {
+    year,
+    session,
+    examCode,
+    level,
+    section,
+    duration,
+    passingScore: 600,
+    title,
+  };
+}
 
 export default function AdminExtractorPage() {
   const [ingestMode, setIngestMode] = useState<"upload" | "server">("upload");
@@ -62,6 +186,7 @@ export default function AdminExtractorPage() {
   const [formDuration, setFormDuration] = useState<number>(90);
   const [formPassingScore, setFormPassingScore] = useState<number>(600);
   const [formAutoTranslate, setFormAutoTranslate] = useState<boolean>(true);
+  const [autofillSuccessToast, setAutofillSuccessToast] = useState(false);
 
   // Parsing, Progress & Processing state
   const [isParsing, setIsParsing] = useState(false);
@@ -87,6 +212,22 @@ export default function AdminExtractorPage() {
       })
       .catch(() => setLoadingFiles(false));
   }, []);
+
+  // Autofill metadata based on filename
+  const applyAutofill = (filename: string) => {
+    const meta = autofillExamMetadataFromFilename(filename);
+    setFormTitle(meta.title);
+    setFormLevel(meta.level);
+    setFormExamCode(meta.examCode);
+    setFormYear(meta.year);
+    setFormSession(meta.session);
+    setFormSection(meta.section);
+    setFormDuration(meta.duration);
+    setFormPassingScore(meta.passingScore);
+
+    setAutofillSuccessToast(true);
+    setTimeout(() => setAutofillSuccessToast(false), 3500);
+  };
 
   // Simulated progress timer for smooth visual feedback
   const startProgressSimulation = (hasAutoTranslate: boolean) => {
@@ -400,9 +541,7 @@ export default function AdminExtractorPage() {
                     const f = e.target.files?.[0];
                     if (f) {
                       setQsFile(f);
-                      if (!formTitle) {
-                        setFormTitle(f.name.replace(".pdf", ""));
-                      }
+                      applyAutofill(f.name);
                     }
                   }}
                   className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-rose-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-rose-500 cursor-pointer"
@@ -453,10 +592,29 @@ export default function AdminExtractorPage() {
               </div>
             </div>
 
-            {/* Metadata Fields Grid */}
+            {/* Metadata Fields Grid with Autofill Trigger */}
             <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-              <div className="font-bold text-xs text-zinc-700 dark:text-zinc-300">
-                Informasi & Metadata Lembar Ujian:
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="font-bold text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                  <span>Informasi & Metadata Lembar Ujian:</span>
+                  {autofillSuccessToast && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 animate-in fade-in">
+                      <Check className="h-3 w-3" />
+                      <span>Field terisi otomatis dari nama berkas!</span>
+                    </span>
+                  )}
+                </div>
+
+                {qsFile && (
+                  <button
+                    type="button"
+                    onClick={() => applyAutofill(qsFile.name)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/50 dark:text-indigo-300 cursor-pointer"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                    <span>✨ Isi Ulang Otomatis dari Nama File</span>
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
@@ -468,7 +626,7 @@ export default function AdminExtractorPage() {
                     type="text"
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="e.g. 令和7年度 基本情報技術者試験 科目A"
+                    placeholder="e.g. 令和7年度 基本情報技術者試験 (科目A)"
                     required
                   />
                 </div>
