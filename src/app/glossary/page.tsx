@@ -108,27 +108,27 @@ export default function GlossaryPage() {
           <span className="px-2 text-[11px] font-bold text-zinc-400 uppercase">Bahasa Definisi:</span>
           <button
             onClick={() => setTargetLang("id")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold cursor-pointer ${
               targetLang === "id" ? "bg-indigo-600 text-white" : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300"
             }`}
           >
-            🇮🇩 ID
+            ID
           </button>
           <button
             onClick={() => setTargetLang("en")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold cursor-pointer ${
               targetLang === "en" ? "bg-indigo-600 text-white" : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300"
             }`}
           >
-            🇬🇧 EN
+            EN
           </button>
           <button
             onClick={() => setTargetLang("vi")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold cursor-pointer ${
               targetLang === "vi" ? "bg-indigo-600 text-white" : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300"
             }`}
           >
-            🇻🇳 VI
+            VI
           </button>
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function GlossaryPage() {
                       {defText}
                     </p>
                     <p className="rounded-xl bg-zinc-50 p-2.5 text-[11px] text-zinc-500 leading-relaxed italic dark:bg-zinc-800/50">
-                      🇯🇵 &quot;{term.definition_ja}&quot;
+                      <span className="font-bold not-italic mr-1 text-[10px] text-zinc-400">JA:</span>&quot;{term.definition_ja}&quot;
                     </p>
                   </div>
                 </div>

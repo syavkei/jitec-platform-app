@@ -4,7 +4,19 @@ import { useState, useEffect } from "react";
 import { Question, SupportedLang } from "@/types";
 import { useI18nStore } from "@/lib/i18n";
 import { FuriganaText } from "../common/FuriganaTooltip";
-import { Flag, Languages, CheckCircle, XCircle, Info, HelpCircle, Columns, Sparkles } from "lucide-react";
+import {
+  Flag,
+  Languages,
+  CheckCircle,
+  XCircle,
+  Info,
+  HelpCircle,
+  Columns,
+  Sparkles,
+  Globe,
+  Lightbulb,
+  FileText,
+} from "lucide-react";
 
 interface QuestionCardProps {
   question: Question;
@@ -92,7 +104,7 @@ export function QuestionCard({
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
               }`}
             >
-              🇯🇵 JA
+              JA
             </button>
             <button
               onClick={() => { setActiveLang("en"); setIsDualView(false); }}
@@ -102,7 +114,7 @@ export function QuestionCard({
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
               }`}
             >
-              🇬🇧 EN
+              EN
             </button>
             <button
               onClick={() => { setActiveLang("id"); setIsDualView(false); }}
@@ -112,7 +124,7 @@ export function QuestionCard({
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
               }`}
             >
-              🇮🇩 ID
+              ID
             </button>
             <button
               onClick={() => { setActiveLang("vi"); setIsDualView(false); }}
@@ -122,7 +134,7 @@ export function QuestionCard({
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300"
               }`}
             >
-              🇻🇳 VI
+              VI
             </button>
             <button
               onClick={() => setIsDualView(!isDualView)}
@@ -159,8 +171,9 @@ export function QuestionCard({
         {isDualView ? (
           <div className="space-y-4 rounded-2xl border border-purple-100 bg-purple-50/30 p-5 dark:border-purple-900/40 dark:bg-purple-950/20">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 mb-1.5 flex items-center gap-1">
-                <span>🇯🇵 Lembar Asli Jepang (Hover Kanji Furigana)</span>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 mb-1.5 flex items-center gap-1.5">
+                <Languages className="h-3.5 w-3.5" />
+                <span>Lembar Asli Bahasa Jepang (Hover Kanji Furigana)</span>
               </div>
               <div className="text-base sm:text-lg font-medium text-zinc-900 leading-relaxed dark:text-white">
                 <FuriganaText text={question.question_text_ja} />
@@ -168,8 +181,9 @@ export function QuestionCard({
             </div>
 
             <div className="border-t border-purple-200/60 pt-3 dark:border-purple-900/60">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-1.5">
-                <span>🌐 Terjemahan ({activeLang.toUpperCase()})</span>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-1.5 flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                <span>Terjemahan ({activeLang.toUpperCase()})</span>
               </div>
               <p className="text-sm sm:text-base font-normal text-zinc-700 dark:text-zinc-200 leading-relaxed">
                 {getTranslatedQuestionText(activeLang) || getTranslatedQuestionText("en") || getTranslatedQuestionText("id") || (
@@ -289,14 +303,20 @@ export function QuestionCard({
           </div>
 
           <div className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            <span className="font-bold text-zinc-900 dark:text-white">💡 Pembahasan: </span>
+            <span className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5 mb-1">
+              <Lightbulb className="h-4 w-4 text-amber-500" />
+              <span>Pembahasan:</span>
+            </span>
             {getTranslatedExplanation(activeLang) || question.explanation_id || question.explanation_ja}
           </div>
 
           {question.examiner_commentary && (
             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
-              <span className="font-bold">📝 Komentar Penguji IPA (採点講評): </span>
-              {question.examiner_commentary}
+              <div className="font-bold flex items-center gap-1.5 mb-1">
+                <FileText className="h-3.5 w-3.5 text-amber-700" />
+                <span>Komentar Penguji IPA (採点講評):</span>
+              </div>
+              <p>{question.examiner_commentary}</p>
             </div>
           )}
         </div>

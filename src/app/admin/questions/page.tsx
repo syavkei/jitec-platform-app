@@ -247,12 +247,14 @@ function QuestionsManagementContent() {
                 </div>
                 {q.question_text_en && (
                   <div className="text-blue-600 dark:text-blue-400">
-                    🇬🇧 {q.question_text_en}
+                    <span className="font-bold mr-1 text-[10px] uppercase rounded bg-blue-50 dark:bg-blue-950 px-1 py-0.5">EN</span>
+                    {q.question_text_en}
                   </div>
                 )}
                 {q.question_text_id && (
                   <div className="text-emerald-600 dark:text-emerald-400">
-                    🇮🇩 {q.question_text_id}
+                    <span className="font-bold mr-1 text-[10px] uppercase rounded bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5">ID</span>
+                    {q.question_text_id}
                   </div>
                 )}
               </div>
@@ -295,14 +297,14 @@ function QuestionsManagementContent() {
                   type="button"
                   onClick={handleAITranslateCurrent}
                   disabled={isTranslating}
-                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:opacity-90 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>{isTranslating ? "Menerjemahkan..." : "✨ AI Auto-Translate"}</span>
+                  <span>{isTranslating ? "Menerjemahkan..." : "AI Auto-Translate"}</span>
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -330,16 +332,17 @@ function QuestionsManagementContent() {
                     Kunci Jawaban:
                   </label>
                   <select
-                    value={editingQuestion.correct_answer || "ア"}
+                    value={editingQuestion.correct_answer || ""}
                     onChange={(e) =>
                       setEditingQuestion({ ...editingQuestion, correct_answer: e.target.value })
                     }
-                    className="mt-1 w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 font-bold text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-indigo-400"
+                    className="mt-1 w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 font-bold text-indigo-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-indigo-300"
                   >
-                    <option value="ア">ア</option>
-                    <option value="イ">イ</option>
-                    <option value="ウ">ウ</option>
-                    <option value="エ">エ</option>
+                    <option value="">-- Pilih Kunci --</option>
+                    <option value="ア">ア (A)</option>
+                    <option value="イ">イ (B)</option>
+                    <option value="ウ">ウ (C)</option>
+                    <option value="エ">エ (D)</option>
                   </select>
                 </div>
 
@@ -362,7 +365,7 @@ function QuestionsManagementContent() {
               {/* Japanese Question */}
               <div>
                 <label className="block font-semibold text-zinc-700 dark:text-zinc-300">
-                  Teks Soal (🇯🇵 Bahasa Jepang):
+                  Teks Soal (JA - Bahasa Jepang):
                 </label>
                 <textarea
                   rows={3}
@@ -377,7 +380,7 @@ function QuestionsManagementContent() {
               {/* English Question */}
               <div>
                 <label className="block font-semibold text-blue-600 dark:text-blue-400">
-                  Teks Soal (🇬🇧 English):
+                  Teks Soal (EN - English):
                 </label>
                 <textarea
                   rows={2}
@@ -393,7 +396,7 @@ function QuestionsManagementContent() {
               {/* Indonesian Question */}
               <div>
                 <label className="block font-semibold text-emerald-600 dark:text-emerald-400">
-                  Teks Soal (🇮🇩 Bahasa Indonesia):
+                  Teks Soal (ID - Bahasa Indonesia):
                 </label>
                 <textarea
                   rows={2}
@@ -425,7 +428,7 @@ function QuestionsManagementContent() {
                         copy[idx].text_ja = e.target.value;
                         setEditingQuestion({ ...editingQuestion, options: copy });
                       }}
-                      placeholder={`🇯🇵 Teks Jepang Opsi ${opt.key}`}
+                      placeholder={`Teks Jepang Opsi ${opt.key}`}
                       className="w-full rounded-lg border border-zinc-300 bg-white p-2 text-xs text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                     />
                     <div className="grid grid-cols-2 gap-2">
@@ -437,7 +440,7 @@ function QuestionsManagementContent() {
                           copy[idx].text_en = e.target.value;
                           setEditingQuestion({ ...editingQuestion, options: copy });
                         }}
-                        placeholder={`🇬🇧 English Opsi ${opt.key}`}
+                        placeholder={`English Opsi ${opt.key}`}
                         className="w-full rounded-lg border border-zinc-200 bg-white p-1.5 text-[11px] text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
                       />
                       <input
@@ -448,7 +451,7 @@ function QuestionsManagementContent() {
                           copy[idx].text_id = e.target.value;
                           setEditingQuestion({ ...editingQuestion, options: copy });
                         }}
-                        placeholder={`🇮🇩 Indonesia Opsi ${opt.key}`}
+                        placeholder={`Indonesia Opsi ${opt.key}`}
                         className="w-full rounded-lg border border-zinc-200 bg-white p-1.5 text-[11px] text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
                       />
                     </div>

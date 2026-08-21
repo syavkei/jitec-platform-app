@@ -62,7 +62,7 @@ export const UI_TRANSLATIONS: Record<SupportedLang, I18nTranslations> = {
     practiceInstant: "Latihan Santai (Instant Review)",
     correctAnswer: "Jawaban Benar!",
     wrongAnswer: "Jawaban Belum Tepat",
-    explanation: "💡 Pembahasan Teknis:",
+    explanation: "Pembahasan Teknis:",
     kanjiHoverHint: "Arahkan kursor pada istilah kanji untuk melihat cara baca dan artinya",
   },
   en: {
@@ -92,7 +92,7 @@ export const UI_TRANSLATIONS: Record<SupportedLang, I18nTranslations> = {
     practiceInstant: "Practice Mode (Instant Review)",
     correctAnswer: "Correct Answer!",
     wrongAnswer: "Incorrect Answer",
-    explanation: "💡 Technical Explanation:",
+    explanation: "Technical Explanation:",
     kanjiHoverHint: "Hover over technical Kanji terms to view readings and definitions",
   },
   ja: {
@@ -122,7 +122,7 @@ export const UI_TRANSLATIONS: Record<SupportedLang, I18nTranslations> = {
     practiceInstant: "解説モード（即時判定）",
     correctAnswer: "正解です！",
     wrongAnswer: "不正解です",
-    explanation: "💡 技術解説・採点講評:",
+    explanation: "技術解説・採点講評:",
     kanjiHoverHint: "漢字の上にマウスを置くと読み仮名と意味が表示されます",
   },
   vi: {
@@ -152,7 +152,7 @@ export const UI_TRANSLATIONS: Record<SupportedLang, I18nTranslations> = {
     practiceInstant: "Chế Độ Luyện Tập (Xem Giải Thích)",
     correctAnswer: "Đáp Án Chính Xác!",
     wrongAnswer: "Đáp Án Chưa Đúng",
-    explanation: "💡 Giải Thích Chi Tiết:",
+    explanation: "Giải Thích Chi Tiết:",
     kanjiHoverHint: "Rê chuột vào từ Kanji IT để xem phiên âm Furigana và ý nghĩa",
   },
 };

@@ -149,13 +149,13 @@ export default function UserRegisterPage() {
                     onChange={(e) => setCountry(e.target.value)}
                     className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-2.5 text-xs text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white font-medium"
                   >
-                    <option value="Indonesia">🇮🇩 Indonesia</option>
-                    <option value="Vietnam">🇻🇳 Vietnam</option>
-                    <option value="Philippines">🇵🇭 Philippines</option>
-                    <option value="Myanmar">🇲🇲 Myanmar</option>
-                    <option value="Mongolia">🇲🇳 Mongolia</option>
-                    <option value="India">🇮🇳 India</option>
-                    <option value="Other">🌍 Lainnya</option>
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Vietnam">Vietnam</option>
+                    <option value="Philippines">Philippines</option>
+                    <option value="Myanmar">Myanmar</option>
+                    <option value="Mongolia">Mongolia</option>
+                    <option value="India">India</option>
+                    <option value="Other">Lainnya / Other</option>
                   </select>
                 </div>
 

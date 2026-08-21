@@ -168,9 +168,9 @@ export function FuriganaText({ text, className = "" }: FuriganaTextProps) {
               </span>
             </div>
             <div className="mt-2 space-y-1.5 text-xs text-zinc-300">
-              <div><strong className="text-zinc-400 font-normal">🇬🇧 EN:</strong> {activeTooltip.en}</div>
-              <div><strong className="text-zinc-400 font-normal">🇮🇩 ID:</strong> {activeTooltip.id}</div>
-              <div><strong className="text-zinc-400 font-normal">🇻🇳 VI:</strong> {activeTooltip.vi}</div>
+              <div><strong className="text-zinc-400 font-normal">EN:</strong> {activeTooltip.en}</div>
+              <div><strong className="text-zinc-400 font-normal">ID:</strong> {activeTooltip.id}</div>
+              <div><strong className="text-zinc-400 font-normal">VI:</strong> {activeTooltip.vi}</div>
             </div>
           </div>
         </div>

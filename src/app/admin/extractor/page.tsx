@@ -242,9 +242,9 @@ export default function AdminExtractorPage() {
         current = 95;
         setProgressStage("Menyelesaikan formatting & studio editor...");
       } else if (current >= 65 && hasAutoTranslate) {
-        setProgressStage("✨ AI Assistant menerjemahkan soal ke EN, ID, VI...");
+        setProgressStage("AI Assistant menerjemahkan soal ke EN, ID, VI...");
       } else if (current >= 35) {
-        setProgressStage("🔍 Mem-parsing teks soal & mengekstrak diagram...");
+        setProgressStage("Mem-parsing teks soal & mengekstrak diagram...");
       }
 
       setProgressPercent(current);
@@ -350,7 +350,7 @@ export default function AdminExtractorPage() {
     try {
       const translatedExam = await batchAiTranslateExam(parsedExam, ["en", "id", "vi"]);
       setParsedExam({ ...translatedExam });
-      alert("✨ Seluruh soal berhasil diterjemahkan ke EN, ID, dan VI oleh AI!");
+      alert("Seluruh soal berhasil diterjemahkan ke EN, ID, dan VI oleh AI!");
     } catch (err: any) {
       alert(`Batch AI Translation gagal: ${err.message}`);
     } finally {
@@ -469,7 +469,7 @@ export default function AdminExtractorPage() {
               size="sm"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isBatchTranslating ? "Menerjemahkan Semua..." : "✨ AI Translate All (EN/ID/VI)"}</span>
+              <span>{isBatchTranslating ? "Menerjemahkan Semua..." : "AI Translate All (EN/ID/VI)"}</span>
             </Button>
 
             <Button
@@ -547,8 +547,9 @@ export default function AdminExtractorPage() {
                   className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-rose-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-rose-500 cursor-pointer"
                 />
                 {qsFile && (
-                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
-                    ✓ {qsFile.name} ({(qsFile.size / 1024).toFixed(1)} KB)
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate flex items-center justify-center gap-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{qsFile.name} ({(qsFile.size / 1024).toFixed(1)} KB)</span>
                   </div>
                 )}
               </div>
@@ -566,8 +567,9 @@ export default function AdminExtractorPage() {
                   className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-zinc-700 cursor-pointer dark:file:bg-zinc-700"
                 />
                 {ansFile && (
-                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
-                    ✓ {ansFile.name} ({(ansFile.size / 1024).toFixed(1)} KB)
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate flex items-center justify-center gap-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{ansFile.name} ({(ansFile.size / 1024).toFixed(1)} KB)</span>
                   </div>
                 )}
               </div>
@@ -585,8 +587,9 @@ export default function AdminExtractorPage() {
                   className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-zinc-700 cursor-pointer dark:file:bg-zinc-700"
                 />
                 {cmntFile && (
-                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
-                    ✓ {cmntFile.name} ({(cmntFile.size / 1024).toFixed(1)} KB)
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate flex items-center justify-center gap-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{cmntFile.name} ({(cmntFile.size / 1024).toFixed(1)} KB)</span>
                   </div>
                 )}
               </div>
@@ -612,7 +615,7 @@ export default function AdminExtractorPage() {
                     className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/50 dark:text-indigo-300 cursor-pointer"
                   >
                     <Wand2 className="h-3.5 w-3.5" />
-                    <span>✨ Isi Ulang Otomatis dari Nama File</span>
+                    <span>Isi Ulang Otomatis dari Nama File</span>
                   </button>
                 )}
               </div>
@@ -721,7 +724,7 @@ export default function AdminExtractorPage() {
                     className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500"
                   />
                   <Sparkles className="h-4 w-4 text-purple-600" />
-                  <span>✨ Otomatis Terjemahkan ke EN, ID, dan VI Menggunakan AI saat ekstraksi</span>
+                  <span>Otomatis Terjemahkan ke EN, ID, dan VI Menggunakan AI saat ekstraksi</span>
                 </label>
               </div>
             </div>
@@ -735,7 +738,7 @@ export default function AdminExtractorPage() {
                 className="h-11 px-6 font-bold"
               >
                 <CloudUpload className="h-4 w-4" />
-                <span>{isParsing ? "Sedang Mengekstrak Soal..." : "🚀 Unggah & Mulai Ekstraksi Soal"}</span>
+                <span>{isParsing ? "Sedang Mengekstrak Soal..." : "Unggah & Mulai Ekstraksi Soal"}</span>
               </Button>
             </div>
           </form>
@@ -761,7 +764,7 @@ export default function AdminExtractorPage() {
                 >
                   {files.map((f) => (
                     <option key={f.id} value={f.id}>
-                      [{f.code}] {f.filename} {f.matched_ans_file ? "✓ +Kunci Jawaban" : ""}
+                      [{f.code}] {f.filename} {f.matched_ans_file ? "(+Kunci Jawaban)" : ""}
                     </option>
                   ))}
                 </select>
@@ -889,7 +892,7 @@ export default function AdminExtractorPage() {
             Studio Siap Mengekstrak Berkas PDF
           </h3>
           <p className="mt-1 max-w-md text-xs text-zinc-500">
-            Unggah berkas PDF soal kakomon di atas lalu klik <strong>&quot;🚀 Unggah & Mulai Ekstraksi Soal&quot;</strong> untuk mengekstrak layout pertanyaan, gambar diagram, kunci jawaban, dan terjemahan otomatis.
+            Unggah berkas PDF soal kakomon di atas lalu klik <strong>&quot;Unggah & Mulai Ekstraksi Soal&quot;</strong> untuk mengekstrak layout pertanyaan, gambar diagram, kunci jawaban, dan terjemahan otomatis.
           </p>
         </div>
       )}

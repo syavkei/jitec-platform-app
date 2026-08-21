@@ -41,11 +41,11 @@ export function Navbar() {
     { href: "/glossary", label: "Kamus Kanji IT", icon: BookOpen },
   ];
 
-  const languages: { code: SupportedLang; name: string; flag: string }[] = [
-    { code: "id", name: "Bahasa Indonesia", flag: "🇮🇩" },
-    { code: "en", name: "English (Global)", flag: "🇬🇧" },
-    { code: "ja", name: "日本語 (Japanese)", flag: "🇯🇵" },
-    { code: "vi", name: "Tiếng Việt (VN)", flag: "🇻🇳" },
+  const languages: { code: SupportedLang; name: string; label: string }[] = [
+    { code: "id", name: "Bahasa Indonesia", label: "ID" },
+    { code: "en", name: "English (Global)", label: "EN" },
+    { code: "ja", name: "日本語 (Japanese)", label: "JA" },
+    { code: "vi", name: "Tiếng Việt (VN)", label: "VI" },
   ];
 
   // Don't show public navbar on dedicated admin screens
@@ -116,8 +116,7 @@ export function Navbar() {
               className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50/80 px-2.5 py-1.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
             >
               <Globe className="h-3.5 w-3.5 text-indigo-600" />
-              <span>{languages.find((l) => l.code === lang)?.flag}</span>
-              <span className="uppercase text-[10px] font-bold">{lang}</span>
+              <span className="font-bold text-[11px] text-indigo-600 dark:text-indigo-400">{languages.find((l) => l.code === lang)?.label}</span>
               <ChevronDown className="h-3 w-3 text-zinc-400" />
             </button>
 
@@ -140,7 +139,7 @@ export function Navbar() {
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span>{l.flag}</span>
+                      <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold text-zinc-700 dark:text-zinc-300">{l.label}</span>
                       <span>{l.name}</span>
                     </span>
                     {lang === l.code && <Check className="h-3.5 w-3.5 text-indigo-600" />}

@@ -77,57 +77,57 @@ export function QuestionEditor({
           <button
             onClick={handleAITranslate}
             disabled={isTranslating}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-purple-500/20 hover:opacity-90 active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-purple-500/20 hover:opacity-90 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span>{isTranslating ? "Menerjemahkan AI..." : "✨ AI Auto-Translate"}</span>
+            <span>{isTranslating ? "Menerjemahkan AI..." : "AI Auto-Translate"}</span>
           </button>
 
           {/* Language / Preview Tab Switcher */}
           <div className="flex items-center rounded-xl border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-700 dark:bg-zinc-800">
             <button
               onClick={() => setActiveTab("ja")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer ${
                 activeTab === "ja"
                   ? "bg-indigo-600 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >
-              🇯🇵 JA
+              JA
             </button>
             <button
               onClick={() => setActiveTab("en")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer ${
                 activeTab === "en"
                   ? "bg-indigo-600 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >
-              🇬🇧 EN
+              EN
             </button>
             <button
               onClick={() => setActiveTab("id")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer ${
                 activeTab === "id"
                   ? "bg-indigo-600 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >
-              🇮🇩 ID
+              ID
             </button>
             <button
               onClick={() => setActiveTab("vi")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer ${
                 activeTab === "vi"
                   ? "bg-indigo-600 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >
-              🇻🇳 VI
+              VI
             </button>
             <button
               onClick={() => setActiveTab("preview")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer ${
                 activeTab === "preview"
                   ? "bg-purple-600 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -181,10 +181,10 @@ export function QuestionEditor({
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Teks Pertanyaan (
-                  {activeTab === "ja" && "🇯🇵 Bahasa Jepang Asli"}
-                  {activeTab === "en" && "🇬🇧 English"}
-                  {activeTab === "id" && "🇮🇩 Bahasa Indonesia"}
-                  {activeTab === "vi" && "🇻🇳 Tiếng Việt"}
+                  {activeTab === "ja" && "JA - Bahasa Jepang Asli"}
+                  {activeTab === "en" && "EN - English"}
+                  {activeTab === "id" && "ID - Bahasa Indonesia"}
+                  {activeTab === "vi" && "VI - Tiếng Việt"}
                   ):
                 </label>
               </div>
@@ -247,8 +247,14 @@ export function QuestionEditor({
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-xs text-indigo-700 dark:text-indigo-400">
-                        Opsi {opt.key} {opt.key === question.correct_answer && "✓ (Kunci Benar)"}
+                      <span className="font-bold text-xs text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
+                        <span>Opsi {opt.key}</span>
+                        {opt.key === question.correct_answer && (
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                            <Check className="h-3 w-3" />
+                            <span>Kunci Benar</span>
+                          </span>
+                        )}
                       </span>
                     </div>
                     <input
@@ -316,12 +322,14 @@ export function QuestionEditor({
               </h4>
               {question.question_text_en && (
                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                  🇬🇧 {question.question_text_en}
+                  <span className="font-bold mr-1 text-[10px] uppercase rounded bg-blue-50 dark:bg-blue-950 px-1 py-0.5">EN</span>
+                  {question.question_text_en}
                 </p>
               )}
               {question.question_text_id && (
                 <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-                  🇮🇩 {question.question_text_id}
+                  <span className="font-bold mr-1 text-[10px] uppercase rounded bg-emerald-50 dark:bg-emerald-950 px-1 py-0.5">ID</span>
+                  {question.question_text_id}
                 </p>
               )}
             </div>
@@ -339,8 +347,8 @@ export function QuestionEditor({
                   <span className="font-bold">{opt.key}.</span>
                   <div className="space-y-0.5">
                     <div>{opt.text_ja}</div>
-                    {opt.text_en && <div className="text-[11px] text-blue-600 dark:text-blue-400">🇬🇧 {opt.text_en}</div>}
-                    {opt.text_id && <div className="text-[11px] text-emerald-600 dark:text-emerald-400">🇮🇩 {opt.text_id}</div>}
+                    {opt.text_en && <div className="text-[11px] text-blue-600 dark:text-blue-400"><span className="font-bold mr-1 text-[9px] uppercase rounded bg-blue-50 dark:bg-blue-950 px-1 py-0.2">EN</span>{opt.text_en}</div>}
+                    {opt.text_id && <div className="text-[11px] text-emerald-600 dark:text-emerald-400"><span className="font-bold mr-1 text-[9px] uppercase rounded bg-emerald-50 dark:bg-emerald-950 px-1 py-0.2">ID</span>{opt.text_id}</div>}
                   </div>
                 </div>
               ))}

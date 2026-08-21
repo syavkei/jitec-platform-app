@@ -171,9 +171,9 @@ export default function AdminGlossaryManagementPage() {
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/40">
                 <th className="py-3.5 px-4 font-semibold">KANJI & FURIGANA</th>
-                <th className="py-3.5 px-4 font-semibold">🇬🇧 ENGLISH</th>
-                <th className="py-3.5 px-4 font-semibold">🇮🇩 INDONESIA</th>
-                <th className="py-3.5 px-4 font-semibold">🇻🇳 VIETNAMESE</th>
+                <th className="py-3.5 px-4 font-semibold">ENGLISH (EN)</th>
+                <th className="py-3.5 px-4 font-semibold">INDONESIA (ID)</th>
+                <th className="py-3.5 px-4 font-semibold">VIETNAMESE (VI)</th>
                 <th className="py-3.5 px-4 font-semibold">KATEGORI</th>
                 <th className="py-3.5 px-4 font-semibold text-right">AKSI</th>
               </tr>
@@ -301,7 +301,7 @@ export default function AdminGlossaryManagementPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-blue-600 dark:text-blue-400">
-                    🇬🇧 English Term:
+                    English Term (EN):
                   </label>
                   <input
                     type="text"
@@ -314,7 +314,7 @@ export default function AdminGlossaryManagementPage() {
 
                 <div>
                   <label className="block font-semibold text-emerald-600 dark:text-emerald-400">
-                    🇮🇩 Indonesian Term:
+                    Indonesian Term (ID):
                   </label>
                   <input
                     type="text"
@@ -327,7 +327,7 @@ export default function AdminGlossaryManagementPage() {
 
                 <div>
                   <label className="block font-semibold text-purple-600 dark:text-purple-400">
-                    🇻🇳 Vietnamese Term:
+                    Vietnamese Term (VI):
                   </label>
                   <input
                     type="text"
@@ -355,7 +355,7 @@ export default function AdminGlossaryManagementPage() {
               {/* Definitions */}
               <div>
                 <label className="block font-semibold text-zinc-700 dark:text-zinc-300">
-                  Definisi Konseptual (🇮🇩 Bahasa Indonesia):
+                  Definisi Konseptual (ID - Bahasa Indonesia):
                 </label>
                 <textarea
                   rows={2}
@@ -367,7 +367,7 @@ export default function AdminGlossaryManagementPage() {
 
               <div>
                 <label className="block font-semibold text-zinc-700 dark:text-zinc-300">
-                  Definisi Asli (🇯🇵 Bahasa Jepang):
+                  Definisi Asli (JA - Bahasa Jepang):
                 </label>
                 <textarea
                   rows={2}

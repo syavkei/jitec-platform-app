@@ -74,8 +74,8 @@ export function QuestionPalette({
             >
               {q.question_number}
               {isFlagged && !isCurrent && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 text-[8px] text-white">
-                  ★
+                <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 text-white shadow-xs">
+                  <Flag className="h-1.5 w-1.5 fill-white" />
                 </span>
               )}
             </button>

@@ -27,6 +27,7 @@ import {
   Building2,
   Users,
   Compass,
+  Languages,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -64,7 +65,7 @@ export default function HomePage() {
       level: "Level 2",
       code: "FE",
       name: "Fundamental IT Engineer (基本情報技術者)",
-      badge: "Standar Utama Rekrutmen ⭐",
+      badge: "Standar Utama Rekrutmen",
       badgeVariant: "level2" as const,
       desc: "Standar de-facto untuk software engineer junior & mid di Jepang. Menguji algoritma pseudocode, SQL, sistem komputer, dan arsitektur jaringan.",
       points: "+5 Poin Visa Kerja Berketerampilan Khusus (HSP)",
@@ -84,7 +85,7 @@ export default function HomePage() {
       level: "Level 4",
       code: "DB / SC",
       name: "Specialist Examinations (高度情報処理技術者)",
-      badge: "Spesialisasi Tingkat Tinggi 🔥",
+      badge: "Spesialisasi Tingkat Tinggi",
       badgeVariant: "level4" as const,
       desc: "Sertifikasi spesialis murni tingkat lanjut: Database Specialist (DB), Registered Information Security Specialist (SC), dan System Architect.",
       points: "+20 Poin Visa HSP & Standar Arsitek IT Tokyo",
@@ -234,7 +235,7 @@ export default function HomePage() {
                           : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"
                       }`}
                     >
-                      {l === "ja" ? "🇯🇵 JA" : l === "en" ? "🇬🇧 EN" : l === "id" ? "🇮🇩 ID" : "🇻🇳 VI"}
+                      {l.toUpperCase()}
                     </button>
                   ))}
                 </div>
@@ -256,8 +257,9 @@ export default function HomePage() {
                     )}
                   </div>
                   {demoLang !== "ja" && (
-                    <div className="text-xs text-zinc-400 italic">
-                      🇯🇵 Asli: <FuriganaText text={demoQuestion.ja} />
+                    <div className="text-xs text-zinc-400 flex items-center gap-1.5 pt-1">
+                      <Languages className="h-3.5 w-3.5 text-indigo-500" />
+                      <span>Asli: <FuriganaText text={demoQuestion.ja} /></span>
                     </div>
                   )}
                 </div>
@@ -330,7 +332,7 @@ export default function HomePage() {
             <div className="font-black text-3xl sm:text-4xl text-purple-600 dark:text-purple-400">
               4 Bahasa
             </div>
-            <div className="text-xs font-semibold text-zinc-500">🇯🇵 JA • 🇬🇧 EN • 🇮🇩 ID • 🇻🇳 VI</div>
+            <div className="text-xs font-semibold text-zinc-500">JA (日本語) • EN • ID • VI</div>
           </div>
           <div className="space-y-1 border-r border-zinc-100 last:border-0 dark:border-zinc-800">
             <div className="font-black text-3xl sm:text-4xl text-emerald-600 dark:text-emerald-400">

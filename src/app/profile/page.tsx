@@ -22,6 +22,7 @@ import {
   Sparkles,
   TrendingUp,
   LogOut,
+  Globe,
 } from "lucide-react";
 
 export default function UserProfilePage() {
@@ -85,7 +86,10 @@ export default function UserProfilePage() {
               </div>
               <p className="text-xs text-zinc-500 mt-0.5">{user.email}</p>
               <div className="mt-2 flex items-center gap-3 text-[11px] text-zinc-400">
-                <span>🌍 Asal: {user.country || "Indonesia"}</span>
+                <span className="flex items-center gap-1">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>Asal: {user.country || "Indonesia"}</span>
+                </span>
                 <span>•</span>
                 <span>Role: Kandidat Peserta</span>
               </div>
