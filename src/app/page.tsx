@@ -139,7 +139,7 @@ export default function HomePage() {
         "Integrasi kurikulum & konsultasi teknis",
       ],
       cta: "Hubungi Kami",
-      href: "/admin/login",
+      href: "/register",
       highlight: false,
     },
   ];

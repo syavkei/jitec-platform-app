@@ -96,26 +96,25 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Admin & Security */}
+          {/* Information & Platform */}
           <div className="space-y-2.5">
             <div className="font-bold text-xs text-zinc-900 dark:text-white uppercase tracking-wider">
-              Pengelola & Institusi
+              Bantuan & Akses
             </div>
             <ul className="space-y-2">
               <li>
-                <Link href="/admin/login" className="flex items-center gap-1 text-rose-600 hover:underline">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Admin Studio Login</span>
+                <Link href="/exams" className="hover:text-indigo-600 dark:hover:text-indigo-400">
+                  Panduan Simulasi CBT
                 </Link>
               </li>
               <li>
-                <Link href="/admin/extractor" className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                  PDF & AI Ingestion
+                <Link href="/glossary" className="hover:text-indigo-600 dark:hover:text-indigo-400">
+                  Kamus Kanji & Istilah IT
                 </Link>
               </li>
               <li>
-                <Link href="/admin/settings" className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                  Pengaturan API & Sistem
+                <Link href="/drill" className="hover:text-indigo-600 dark:hover:text-indigo-400">
+                  Latihan Tematik Mandiri
                 </Link>
               </li>
             </ul>

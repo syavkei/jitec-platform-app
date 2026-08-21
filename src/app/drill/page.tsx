@@ -115,13 +115,13 @@ export default function DrillPage() {
             Belum Ada Soal pada Kategori Ini
           </h3>
           <p className="mt-1 max-w-sm text-xs text-zinc-500">
-            Publikasikan lebih banyak bank soal di Admin Studio untuk memperkaya koleksi soal drill.
+            Pilih kategori lain atau ikuti simulasi ujian lengkap di bank soal CBT.
           </p>
           <Link
-            href="/admin/extractor"
+            href="/exams"
             className="mt-5 rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-xs text-white"
           >
-            Buka PDF Extractor Studio
+            Lihat Bank Soal Lengkap
           </Link>
         </div>
       ) : (
