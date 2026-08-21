@@ -100,7 +100,7 @@ export function Navbar() {
           {/* Admin Studio Shortcut Pill */}
           <Link
             href="/admin"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-rose-200/80 bg-rose-50/70 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-blue-200/80 bg-blue-50/70 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition-colors"
           >
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Admin Studio</span>

@@ -177,7 +177,7 @@ function UserLoginContent() {
             href="/admin/login"
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
           >
-            <ShieldCheck className="h-3.5 w-3.5 text-rose-500" />
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
             <span>Login Khusus Administrator / Staff Studio</span>
             <ArrowRight className="h-3 w-3" />
           </Link>
