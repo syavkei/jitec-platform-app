@@ -35,6 +35,8 @@ import {
   Layers,
   Clock,
   ShieldCheck,
+  Loader2,
+  Check,
 } from "lucide-react";
 
 export default function AdminExtractorPage() {
@@ -61,8 +63,12 @@ export default function AdminExtractorPage() {
   const [formPassingScore, setFormPassingScore] = useState<number>(600);
   const [formAutoTranslate, setFormAutoTranslate] = useState<boolean>(true);
 
-  // Parsing & Processing state
+  // Parsing, Progress & Processing state
   const [isParsing, setIsParsing] = useState(false);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [progressStage, setProgressStage] = useState("Menyiapkan berkas...");
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isBatchTranslating, setIsBatchTranslating] = useState(false);
   const [parsedExam, setParsedExam] = useState<Exam | null>(null);
   const [selectedQIndex, setSelectedQIndex] = useState(0);
@@ -82,6 +88,44 @@ export default function AdminExtractorPage() {
       .catch(() => setLoadingFiles(false));
   }, []);
 
+  // Simulated progress timer for smooth visual feedback
+  const startProgressSimulation = (hasAutoTranslate: boolean) => {
+    setProgressPercent(10);
+    setProgressStage("Mengunggah berkas PDF ke server...");
+
+    let current = 10;
+    progressIntervalRef.current = setInterval(() => {
+      current += Math.floor(Math.random() * 8) + 3;
+
+      if (current >= 95) {
+        current = 95;
+        setProgressStage("Menyelesaikan formatting & studio editor...");
+      } else if (current >= 65 && hasAutoTranslate) {
+        setProgressStage("✨ AI Assistant menerjemahkan soal ke EN, ID, VI...");
+      } else if (current >= 35) {
+        setProgressStage("🔍 Mem-parsing teks soal & mengekstrak diagram...");
+      }
+
+      setProgressPercent(current);
+    }, 600);
+  };
+
+  const stopProgressSimulation = (success: boolean) => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    if (success) {
+      setProgressPercent(100);
+      setProgressStage("Ekstraksi selesai 100%!");
+      setTimeout(() => {
+        setIsParsing(false);
+      }, 500);
+    } else {
+      setIsParsing(false);
+    }
+  };
+
   // Handle upload and parse
   const handleUploadAndParse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +136,7 @@ export default function AdminExtractorPage() {
 
     setIsParsing(true);
     setPublishStatus(null);
+    startProgressSimulation(formAutoTranslate);
 
     const formData = new FormData();
     formData.append("qs_file", qsFile);
@@ -117,11 +162,13 @@ export default function AdminExtractorPage() {
         if (res.exam.questions.length > 0 && res.exam.questions[0].source_page) {
           setCurrentPdfPage(res.exam.questions[0].source_page);
         }
+        stopProgressSimulation(true);
+      } else {
+        stopProgressSimulation(false);
       }
     } catch (err: any) {
+      stopProgressSimulation(false);
       alert(`Gagal mengunggah dan memproses PDF: ${err.message}`);
-    } finally {
-      setIsParsing(false);
     }
   };
 
@@ -130,6 +177,7 @@ export default function AdminExtractorPage() {
     if (!selectedFile) return;
     setIsParsing(true);
     setPublishStatus(null);
+    startProgressSimulation(true);
 
     try {
       const res = await parsePdf(
@@ -145,11 +193,13 @@ export default function AdminExtractorPage() {
         if (res.exam.questions.length > 0 && res.exam.questions[0].source_page) {
           setCurrentPdfPage(res.exam.questions[0].source_page);
         }
+        stopProgressSimulation(true);
+      } else {
+        stopProgressSimulation(false);
       }
     } catch (err: any) {
+      stopProgressSimulation(false);
       alert(`Gagal mem-parsing PDF server: ${err.message}`);
-    } finally {
-      setIsParsing(false);
     }
   };
 
@@ -194,7 +244,62 @@ export default function AdminExtractorPage() {
   const currentQ = parsedExam?.questions[selectedQIndex];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-20">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20 relative">
+      {/* SaaS Progress Overlay Modal during PDF Extraction */}
+      {isParsing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 space-y-6 text-center">
+            {/* Top Pulsing Icon */}
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 shadow-lg shadow-rose-500/20">
+              <Sparkles className="h-8 w-8 animate-spin" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white">
+                Mengekstrak Soal Ujian JITEC
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 min-h-[20px] font-medium">
+                {progressStage}
+              </p>
+            </div>
+
+            {/* Visual Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-zinc-500">Progres Ekstraksi</span>
+                <span className="text-rose-600 dark:text-rose-400">{progressPercent}%</span>
+              </div>
+              <div className="h-3 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800 p-0.5 border border-zinc-200 dark:border-zinc-700">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-600 transition-all duration-500 shadow-md"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Checklist Steps */}
+            <div className="space-y-2 text-left text-xs bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <div className={`flex items-center gap-2 font-medium ${progressPercent >= 25 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-zinc-400"}`}>
+                {progressPercent >= 25 ? <Check className="h-4 w-4 shrink-0" /> : <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
+                <span>Unggah & Dekode Berkas PDF</span>
+              </div>
+              <div className={`flex items-center gap-2 font-medium ${progressPercent >= 55 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-zinc-400"}`}>
+                {progressPercent >= 55 ? <Check className="h-4 w-4 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-zinc-300 dark:border-zinc-600 shrink-0" />}
+                <span>Parsing Butir Soal, Opsi & Diagram</span>
+              </div>
+              <div className={`flex items-center gap-2 font-medium ${progressPercent >= 85 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-zinc-400"}`}>
+                {progressPercent >= 85 ? <Check className="h-4 w-4 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-zinc-300 dark:border-zinc-600 shrink-0" />}
+                <span>AI Auto-Translate (EN, ID, VI)</span>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-zinc-400 italic">
+              Mohon tunggu sejenak. Jangan menutup atau merefresh halaman ini.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Studio Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
         <div className="flex items-center gap-3">
@@ -472,7 +577,7 @@ export default function AdminExtractorPage() {
                 className="h-11 px-6 font-bold"
               >
                 <CloudUpload className="h-4 w-4" />
-                <span>{isParsing ? "Sedang Mengunggah & Mengekstrak Soal..." : "🚀 Unggah & Mulai Ekstraksi Soal"}</span>
+                <span>{isParsing ? "Sedang Mengekstrak Soal..." : "🚀 Unggah & Mulai Ekstraksi Soal"}</span>
               </Button>
             </div>
           </form>
