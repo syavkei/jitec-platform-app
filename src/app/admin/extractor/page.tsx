@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { AvailableFile, Exam, Question } from "@/types";
-import { fetchAvailableFiles, parsePdf, publishExam, batchAiTranslateExam } from "@/lib/api";
+import {
+  fetchAvailableFiles,
+  parsePdf,
+  uploadAndParsePdf,
+  publishExam,
+  batchAiTranslateExam,
+} from "@/lib/api";
 import { PdfViewer } from "@/components/admin/PdfViewer";
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Settings,
   FileText,
@@ -18,19 +29,45 @@ import {
   Database,
   ArrowRight,
   Globe,
+  Upload,
+  FolderOpen,
+  CloudUpload,
+  Layers,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
-import Link from "next/link";
 
 export default function AdminExtractorPage() {
+  const [ingestMode, setIngestMode] = useState<"upload" | "server">("upload");
+
+  // Server file selection state
   const [files, setFiles] = useState<AvailableFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [selectedFile, setSelectedFile] = useState<AvailableFile | null>(null);
 
+  // Upload file state
+  const [qsFile, setQsFile] = useState<File | null>(null);
+  const [ansFile, setAnsFile] = useState<File | null>(null);
+  const [cmntFile, setCmntFile] = useState<File | null>(null);
+
+  // Upload metadata form state
+  const [formTitle, setFormTitle] = useState("");
+  const [formLevel, setFormLevel] = useState<string>("level2");
+  const [formExamCode, setFormExamCode] = useState<string>("FE");
+  const [formYear, setFormYear] = useState<number>(2025);
+  const [formSession, setFormSession] = useState<string>("r07");
+  const [formSection, setFormSection] = useState<string>("kamoku_a");
+  const [formDuration, setFormDuration] = useState<number>(90);
+  const [formPassingScore, setFormPassingScore] = useState<number>(600);
+  const [formAutoTranslate, setFormAutoTranslate] = useState<boolean>(true);
+
+  // Parsing & Processing state
   const [isParsing, setIsParsing] = useState(false);
   const [isBatchTranslating, setIsBatchTranslating] = useState(false);
   const [parsedExam, setParsedExam] = useState<Exam | null>(null);
   const [selectedQIndex, setSelectedQIndex] = useState(0);
   const [currentPdfPage, setCurrentPdfPage] = useState(1);
+  const [pdfRelativeUrl, setPdfRelativeUrl] = useState<string | null>(null);
 
   const [publishStatus, setPublishStatus] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -45,7 +82,51 @@ export default function AdminExtractorPage() {
       .catch(() => setLoadingFiles(false));
   }, []);
 
-  const handleParse = async () => {
+  // Handle upload and parse
+  const handleUploadAndParse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!qsFile) {
+      alert("Silakan pilih berkas PDF Soal (*_qs.pdf) terlebih dahulu.");
+      return;
+    }
+
+    setIsParsing(true);
+    setPublishStatus(null);
+
+    const formData = new FormData();
+    formData.append("qs_file", qsFile);
+    if (ansFile) formData.append("ans_file", ansFile);
+    if (cmntFile) formData.append("cmnt_file", cmntFile);
+
+    formData.append("title", formTitle || `${formYear}年度 ${formExamCode} 試験 (${formSection})`);
+    formData.append("level", formLevel);
+    formData.append("exam_code", formExamCode);
+    formData.append("year", String(formYear));
+    formData.append("session", formSession);
+    formData.append("section", formSection);
+    formData.append("duration_minutes", String(formDuration));
+    formData.append("passing_score", String(formPassingScore));
+    formData.append("auto_translate", formAutoTranslate ? "true" : "false");
+
+    try {
+      const res = await uploadAndParsePdf(formData);
+      if (res.success) {
+        setParsedExam(res.exam);
+        setSelectedQIndex(0);
+        setPdfRelativeUrl(null); // Direct preview
+        if (res.exam.questions.length > 0 && res.exam.questions[0].source_page) {
+          setCurrentPdfPage(res.exam.questions[0].source_page);
+        }
+      }
+    } catch (err: any) {
+      alert(`Gagal mengunggah dan memproses PDF: ${err.message}`);
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  // Handle server file parse
+  const handleServerParse = async () => {
     if (!selectedFile) return;
     setIsParsing(true);
     setPublishStatus(null);
@@ -60,12 +141,13 @@ export default function AdminExtractorPage() {
       if (res.success) {
         setParsedExam(res.exam);
         setSelectedQIndex(0);
+        setPdfRelativeUrl(selectedFile.relative_path);
         if (res.exam.questions.length > 0 && res.exam.questions[0].source_page) {
           setCurrentPdfPage(res.exam.questions[0].source_page);
         }
       }
     } catch (err: any) {
-      alert(`Gagal mem-parsing PDF: ${err.message}`);
+      alert(`Gagal mem-parsing PDF server: ${err.message}`);
     } finally {
       setIsParsing(false);
     }
@@ -112,60 +194,296 @@ export default function AdminExtractorPage() {
   const currentQ = parsedExam?.questions[selectedQIndex];
 
   return (
-    <div className="min-h-screen bg-zinc-100/80 pb-20 dark:bg-zinc-950">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20">
       {/* Studio Header */}
-      <div className="border-b border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900 sm:px-8">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-600 font-bold text-white shadow-md shadow-rose-500/20">
-              <Settings className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-lg text-zinc-900 dark:text-white">
-                  PDF Ingestion & Multilingual AI Studio
-                </h1>
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-[10px] text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                  ADMIN
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500">
-                Ekstraksi otomatis soal PDF, crop diagram, dan terjemahan multibahasa (JA ➔ EN, ID, VI).
-              </p>
-            </div>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-600 font-bold text-white shadow-md shadow-rose-500/20">
+            <CloudUpload className="h-6 w-6" />
           </div>
-
-          {parsedExam && (
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={handleBatchAITranslate}
-                disabled={isBatchTranslating}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 font-bold text-xs text-white shadow-md shadow-purple-500/20 hover:opacity-90 active:scale-95 disabled:opacity-50"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>{isBatchTranslating ? "Menerjemahkan Semua..." : "✨ AI Translate All (EN/ID/VI)"}</span>
-              </button>
-
-              <button
-                onClick={handlePublish}
-                disabled={isPublishing}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 font-bold text-xs text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                <span>{isPublishing ? "Menyimpan..." : "Publikasikan ke Bank Soal"}</span>
-              </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-extrabold text-2xl text-zinc-900 dark:text-white tracking-tight">
+                PDF Ingestion & AI Extractor Studio
+              </h1>
+              <Badge variant="destructive">ONLINE READY</Badge>
             </div>
-          )}
+            <p className="text-xs text-zinc-500">
+              Unggah berkas PDF soal kakomon resmi, kunci jawaban, ekstrak diagram, dan terjemahkan otomatis menggunakan AI.
+            </p>
+          </div>
         </div>
+
+        {parsedExam && (
+          <div className="flex items-center gap-2.5">
+            <Button
+              onClick={handleBatchAITranslate}
+              disabled={isBatchTranslating}
+              variant="gradient"
+              size="sm"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>{isBatchTranslating ? "Menerjemahkan Semua..." : "✨ AI Translate All (EN/ID/VI)"}</span>
+            </Button>
+
+            <Button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              variant="success"
+              size="sm"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              <span>{isPublishing ? "Menyimpan..." : "Publikasikan ke Bank Soal"}</span>
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-6">
-        {/* Step 1: File Selector Toolbar */}
-        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      {/* Mode Switcher Tabs */}
+      <div className="flex items-center gap-2 border-b border-zinc-200 pb-3 dark:border-zinc-800">
+        <button
+          onClick={() => setIngestMode("upload")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+            ingestMode === "upload"
+              ? "bg-rose-600 text-white shadow-sm"
+              : "bg-white text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <CloudUpload className="h-4 w-4" />
+          <span>Unggah Berkas PDF (Online / Upload Langsung)</span>
+        </button>
+
+        <button
+          onClick={() => setIngestMode("server")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+            ingestMode === "server"
+              ? "bg-rose-600 text-white shadow-sm"
+              : "bg-white text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <FolderOpen className="h-4 w-4" />
+          <span>Pilih Berkas Repositori Server</span>
+        </button>
+      </div>
+
+      {/* Step 1: Upload Form or Server File Picker */}
+      {ingestMode === "upload" ? (
+        <Card gradientAccent="rose" className="p-6">
+          <form onSubmit={handleUploadAndParse} className="space-y-6">
+            <div>
+              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">
+                Unggah Berkas Ujian Kakomon & Kunci Jawaban
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Pilih berkas PDF dari komputer Anda untuk diproses ke dalam platform.
+              </p>
+            </div>
+
+            {/* File Upload Dropzones */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Question PDF */}
+              <div className="rounded-2xl border-2 border-dashed border-rose-300 bg-rose-50/40 p-4 text-center dark:border-rose-900/50 dark:bg-rose-950/20 space-y-2">
+                <FileText className="mx-auto h-8 w-8 text-rose-600 dark:text-rose-400" />
+                <div className="font-bold text-xs text-zinc-900 dark:text-white">
+                  1. Berkas Soal (*_qs.pdf) <span className="text-rose-600">*</span>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  required
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setQsFile(f);
+                      if (!formTitle) {
+                        setFormTitle(f.name.replace(".pdf", ""));
+                      }
+                    }
+                  }}
+                  className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-rose-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-rose-500 cursor-pointer"
+                />
+                {qsFile && (
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
+                    ✓ {qsFile.name} ({(qsFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
+              </div>
+
+              {/* Answer Key PDF */}
+              <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50/70 p-4 text-center dark:border-zinc-700 dark:bg-zinc-800/40 space-y-2">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                <div className="font-bold text-xs text-zinc-900 dark:text-white">
+                  2. Kunci Jawaban (*_ans.pdf)
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setAnsFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-zinc-700 cursor-pointer dark:file:bg-zinc-700"
+                />
+                {ansFile && (
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
+                    ✓ {ansFile.name} ({(ansFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
+              </div>
+
+              {/* Commentary PDF */}
+              <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50/70 p-4 text-center dark:border-zinc-700 dark:bg-zinc-800/40 space-y-2">
+                <ShieldCheck className="mx-auto h-8 w-8 text-purple-600 dark:text-purple-400" />
+                <div className="font-bold text-xs text-zinc-900 dark:text-white">
+                  3. Pembahasan IPA (*_cmnt.pdf)
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setCmntFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-zinc-600 file:mr-2 file:rounded-xl file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-zinc-700 cursor-pointer dark:file:bg-zinc-700"
+                />
+                {cmntFile && (
+                  <div className="text-[11px] font-semibold text-emerald-600 truncate">
+                    ✓ {cmntFile.name} ({(cmntFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Metadata Fields Grid */}
+            <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="font-bold text-xs text-zinc-700 dark:text-zinc-300">
+                Informasi & Metadata Lembar Ujian:
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                <div className="sm:col-span-2">
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Judul Ujian:
+                  </label>
+                  <Input
+                    type="text"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    placeholder="e.g. 令和7年度 基本情報技術者試験 科目A"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Level Sertifikasi:
+                  </label>
+                  <select
+                    value={formLevel}
+                    onChange={(e) => setFormLevel(e.target.value)}
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-2.5 text-xs text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white font-medium"
+                  >
+                    <option value="level1">Level 1: IT Passport (IP)</option>
+                    <option value="level2">Level 2: FE / SG</option>
+                    <option value="level3">Level 3: Applied IT (AP)</option>
+                    <option value="level4">Level 4: Database Spec (DB)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Kode Ujian:
+                  </label>
+                  <Input
+                    type="text"
+                    value={formExamCode}
+                    onChange={(e) => setFormExamCode(e.target.value)}
+                    placeholder="FE, IP, AP, DB"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Tahun Ujian:
+                  </label>
+                  <Input
+                    type="number"
+                    value={formYear}
+                    onChange={(e) => setFormYear(Number(e.target.value))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Sesi Ujian:
+                  </label>
+                  <Input
+                    type="text"
+                    value={formSession}
+                    onChange={(e) => setFormSession(e.target.value)}
+                    placeholder="r07, haru, aki"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Bagian / Sesi Ujian:
+                  </label>
+                  <Input
+                    type="text"
+                    value={formSection}
+                    onChange={(e) => setFormSection(e.target.value)}
+                    placeholder="kamoku_a, kamoku_b, am, pm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                    Durasi (Menit):
+                  </label>
+                  <Input
+                    type="number"
+                    value={formDuration}
+                    onChange={(e) => setFormDuration(Number(e.target.value))}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Auto AI Translate Toggle */}
+              <div className="flex items-center gap-3 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-indigo-900 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 px-4 py-2.5 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    checked={formAutoTranslate}
+                    onChange={(e) => setFormAutoTranslate(e.target.checked)}
+                    className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  <span>✨ Otomatis Terjemahkan ke EN, ID, dan VI Menggunakan AI saat ekstraksi</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Submit Action */}
+            <div className="flex items-center justify-end pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <Button
+                type="submit"
+                disabled={isParsing || !qsFile}
+                variant="destructive"
+                className="h-11 px-6 font-bold"
+              >
+                <CloudUpload className="h-4 w-4" />
+                <span>{isParsing ? "Sedang Mengunggah & Mengekstrak Soal..." : "🚀 Unggah & Mulai Ekstraksi Soal"}</span>
+              </Button>
+            </div>
+          </form>
+        </Card>
+      ) : (
+        /* Server File Mode */
+        <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex-1 min-w-[280px]">
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Pilih Berkas Kakomon dari Repositori Lokal:
+                Pilih Berkas Kakomon dari Server:
               </label>
               {loadingFiles ? (
                 <div className="h-10 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
@@ -187,130 +505,131 @@ export default function AdminExtractorPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-3 self-end">
+            <Button
+              onClick={handleServerParse}
+              disabled={isParsing || !selectedFile}
+              variant="default"
+              className="self-end h-10 px-5"
+            >
+              <Play className="h-4 w-4" />
+              <span>{isParsing ? "Memproses PDF..." : "Jalankan Ekstraksi Server"}</span>
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {publishStatus && (
+        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300 shadow-sm">
+          <div className="flex items-center gap-2 font-bold">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <span>{publishStatus}</span>
+          </div>
+          <Link
+            href="/exams"
+            className="flex items-center gap-1 font-bold text-emerald-700 underline hover:text-emerald-800 dark:text-emerald-300"
+          >
+            <span>Lihat di Katalog Ujian</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
+
+      {/* Step 2: Split-Screen Studio */}
+      {parsedExam ? (
+        <div className="space-y-4">
+          {/* Question Switcher Stepper */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleParse}
-                disabled={isParsing || !selectedFile}
-                className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2.5 font-bold text-xs text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-500 active:scale-95 disabled:opacity-50"
+                disabled={selectedQIndex === 0}
+                onClick={() => {
+                  const newIdx = Math.max(0, selectedQIndex - 1);
+                  setSelectedQIndex(newIdx);
+                  if (parsedExam.questions[newIdx].source_page) {
+                    setCurrentPdfPage(parsedExam.questions[newIdx].source_page!);
+                  }
+                }}
+                className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800 cursor-pointer"
               >
-                <Play className="h-4 w-4" />
-                <span>{isParsing ? "Memproses PDF & Diagram..." : "Jalankan Ekstraksi"}</span>
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto max-w-md py-1">
+                {parsedExam.questions.map((q, idx) => (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setSelectedQIndex(idx);
+                      if (q.source_page) setCurrentPdfPage(q.source_page);
+                    }}
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-bold text-xs transition-all cursor-pointer ${
+                      idx === selectedQIndex
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : q.correct_answer
+                        ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                        : "border border-amber-400 bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {q.question_number}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={selectedQIndex === parsedExam.questions.length - 1}
+                onClick={() => {
+                  const newIdx = Math.min(parsedExam.questions.length - 1, selectedQIndex + 1);
+                  setSelectedQIndex(newIdx);
+                  if (parsedExam.questions[newIdx].source_page) {
+                    setCurrentPdfPage(parsedExam.questions[newIdx].source_page!);
+                  }
+                }}
+                className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+
+            <div className="text-xs font-semibold text-zinc-500">
+              Total <strong className="text-zinc-900 dark:text-white">{parsedExam.questions.length}</strong> Butir Soal Terekstraksi
+            </div>
           </div>
 
-          {publishStatus && (
-            <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span>{publishStatus}</span>
-              </div>
-              <Link
-                href="/exams"
-                className="flex items-center gap-1 font-semibold text-emerald-700 underline hover:text-emerald-800 dark:text-emerald-300"
-              >
-                <span>Lihat di Katalog</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Step 2: Split-Screen Studio */}
-        {parsedExam ? (
-          <div className="space-y-4">
-            {/* Question Switcher Stepper */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-3.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={selectedQIndex === 0}
-                  onClick={() => {
-                    const newIdx = Math.max(0, selectedQIndex - 1);
-                    setSelectedQIndex(newIdx);
-                    if (parsedExam.questions[newIdx].source_page) {
-                      setCurrentPdfPage(parsedExam.questions[newIdx].source_page!);
-                    }
-                  }}
-                  className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <div className="flex items-center gap-1.5 overflow-x-auto max-w-md py-1">
-                  {parsedExam.questions.map((q, idx) => (
-                    <button
-                      key={q.id}
-                      onClick={() => {
-                        setSelectedQIndex(idx);
-                        if (q.source_page) setCurrentPdfPage(q.source_page);
-                      }}
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-bold text-xs transition-all ${
-                        idx === selectedQIndex
-                          ? "bg-indigo-600 text-white"
-                          : q.correct_answer
-                          ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
-                          : "border border-amber-400 bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {q.question_number}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  disabled={selectedQIndex === parsedExam.questions.length - 1}
-                  onClick={() => {
-                    const newIdx = Math.min(parsedExam.questions.length - 1, selectedQIndex + 1);
-                    setSelectedQIndex(newIdx);
-                    if (parsedExam.questions[newIdx].source_page) {
-                      setCurrentPdfPage(parsedExam.questions[newIdx].source_page!);
-                    }
-                  }}
-                  className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="text-xs text-zinc-500">
-                Total {parsedExam.questions.length} Soal Terekstraksi
-              </div>
+          {/* Split Screen 2 Columns */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 min-h-[650px]">
+            {/* Left Pane: PDF Viewer */}
+            <div className="h-[650px]">
+              <PdfViewer
+                pdfRelativePath={pdfRelativeUrl || (selectedFile?.relative_path ?? null)}
+                currentPage={currentPdfPage}
+              />
             </div>
 
-            {/* Split Screen 2 Columns */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 min-h-[650px]">
-              {/* Left Pane: PDF Viewer */}
-              <div className="h-[650px]">
-                <PdfViewer
-                  pdfRelativePath={selectedFile?.relative_path || null}
-                  currentPage={currentPdfPage}
+            {/* Right Pane: Question Editor */}
+            <div className="h-[650px]">
+              {currentQ && (
+                <QuestionEditor
+                  question={currentQ}
+                  onUpdateQuestion={handleUpdateQuestion}
+                  onSelectPage={(p) => setCurrentPdfPage(p)}
                 />
-              </div>
-
-              {/* Right Pane: Question Editor */}
-              <div className="h-[650px]">
-                {currentQ && (
-                  <QuestionEditor
-                    question={currentQ}
-                    onUpdateQuestion={handleUpdateQuestion}
-                    onSelectPage={(p) => setCurrentPdfPage(p)}
-                  />
-                )}
-              </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
-            <Sparkles className="h-10 w-10 text-indigo-500" />
-            <h3 className="mt-3 font-bold text-base text-zinc-800 dark:text-white">
-              Studio Ekstraksi & Penerjemahan AI Siap
-            </h3>
-            <p className="mt-1 max-w-md text-xs text-zinc-500">
-              Pilih salah satu berkas PDF kakomon di atas lalu klik <strong>&quot;Jalankan Ekstraksi&quot;</strong> untuk memulai pemrosesan layout teks, diagram, dan kunci jawaban secara instan.
-            </p>
+        </div>
+      ) : (
+        <div className="flex min-h-[350px] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
+            <CloudUpload className="h-6 w-6" />
           </div>
-        )}
-      </div>
+          <h3 className="mt-4 font-bold text-base text-zinc-800 dark:text-white">
+            Studio Siap Mengekstrak Berkas PDF
+          </h3>
+          <p className="mt-1 max-w-md text-xs text-zinc-500">
+            Unggah berkas PDF soal kakomon di atas lalu klik <strong>&quot;🚀 Unggah & Mulai Ekstraksi Soal&quot;</strong> untuk mengekstrak layout pertanyaan, gambar diagram, kunci jawaban, dan terjemahan otomatis.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

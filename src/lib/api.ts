@@ -107,6 +107,18 @@ export async function parsePdf(
   return await res.json();
 }
 
+export async function uploadAndParsePdf(formData: FormData): Promise<ParsePDFResponse> {
+  const res = await fetch(`${API_BASE}/extractor/upload-parse`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal mengunggah dan memproses berkas PDF.");
+  }
+  return await res.json();
+}
+
 export async function aiTranslateQuestion(
   question: Question,
   targetLanguages: string[] = ["en", "id", "vi"]
