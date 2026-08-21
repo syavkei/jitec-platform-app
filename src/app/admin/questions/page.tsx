@@ -206,9 +206,9 @@ function QuestionsManagementContent() {
             Tidak ada soal yang ditemukan pada ujian ini.
           </div>
         ) : (
-          filteredQuestions.map((q) => (
+          filteredQuestions.map((q, idx) => (
             <div
-              key={q.id}
+              key={`qrow-${q.id || 'idx'}-${idx}`}
               className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-all hover:border-indigo-300"
             >
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3 dark:border-zinc-800">

@@ -68,7 +68,7 @@ export function QuestionPalette({
 
           return (
             <button
-              key={q.id}
+              key={`pal-${q.id || 'idx'}-${idx}`}
               onClick={() => onSelect(idx)}
               className={`relative flex h-9 w-full items-center justify-center rounded-lg border text-xs transition-all ${btnStyle}`}
             >

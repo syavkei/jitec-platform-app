@@ -557,7 +557,7 @@ export default function AdminExtractorPage() {
               <div className="flex items-center gap-1.5 overflow-x-auto max-w-md py-1">
                 {parsedExam.questions.map((q, idx) => (
                   <button
-                    key={q.id}
+                    key={`q-${q.id || 'idx'}-${idx}`}
                     onClick={() => {
                       setSelectedQIndex(idx);
                       if (q.source_page) setCurrentPdfPage(q.source_page);
